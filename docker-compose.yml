@@ -32,6 +32,8 @@ services:
   frontend:
     build: ./frontend
     container_name: warehouse_frontend
+    environment:
+      API_BASE_URL: http://localhost:8001
     ports:
       - "8080:80"
     depends_on:

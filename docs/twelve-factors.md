@@ -21,6 +21,7 @@ Frontend не требует пакетного менеджера и состо
 - `DATABASE_URL` - строка подключения к PostgreSQL;
 - `AUTO_SEED` - включение тестовых данных;
 - `PORT` - порт запуска API.
+- `API_BASE_URL` - публичный адрес backend API для frontend-контейнера.
 
 Пример значений находится в `.env.example`.
 
