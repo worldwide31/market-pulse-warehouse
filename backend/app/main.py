@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session, joinedload
 
 from . import crud, models, schemas
+from .config import AUTO_SEED
 from .database import Base, engine, get_db, wait_for_database
 from .security import create_token, get_current_user, require_roles, verify_password
 from .seed import seed_database
@@ -16,7 +17,8 @@ async def lifespan(_: FastAPI):
     # создаем таблицы и добавляем демонстрационные данные.
     wait_for_database()
     Base.metadata.create_all(bind=engine)
-    seed_database()
+    if AUTO_SEED:
+        seed_database()
     yield
 
 

@@ -1,14 +1,9 @@
-import os
 import time
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
-
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql+psycopg://warehouse:warehouse@localhost:5432/warehouse",
-)
+from .config import DATABASE_URL
 
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

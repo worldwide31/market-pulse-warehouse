@@ -91,3 +91,6 @@ docker compose exec api pytest
 ## Графические материалы
 
 UML и схемы находятся в [docs/architecture.md](docs/architecture.md), структура презентации в [docs/presentation.md](docs/presentation.md).
+## Методология 12 факторов
+
+Отдельное описание соответствия проекта методологии 12 факторов находится в [docs/twelve-factors.md](docs/twelve-factors.md).

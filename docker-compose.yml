@@ -21,6 +21,8 @@ services:
     container_name: warehouse_api
     environment:
       DATABASE_URL: postgresql+psycopg://warehouse:warehouse@postgres:5432/warehouse
+      AUTO_SEED: "true"
+      PORT: "8000"
     ports:
       - "8001:8000"
     depends_on:
