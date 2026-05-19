@@ -30,6 +30,7 @@ jobs:
     env:
       DATABASE_URL: postgresql+psycopg://warehouse:warehouse@localhost:5432/warehouse
       AUTO_SEED: "true"
+      PYTHONPATH: ${{ github.workspace }}/backend
 
     steps:
       - name: Checkout
