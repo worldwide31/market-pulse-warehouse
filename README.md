@@ -94,3 +94,20 @@ UML и схемы находятся в [docs/architecture.md](docs/architecture
 ## Методология 12 факторов
 
 Отдельное описание соответствия проекта методологии 12 факторов находится в [docs/twelve-factors.md](docs/twelve-factors.md).
+
+## CI/CD
+
+GitHub Actions workflow находится в `.github/workflows/ci-cd.yml`.
+
+Pipeline выполняет:
+
+- запуск backend-тестов `pytest` с PostgreSQL service container;
+- сборку Docker-образа backend;
+- сборку Docker-образа frontend;
+- опциональный CD-деплой в Render через Deploy Hook.
+
+Чтобы включить CD:
+
+1. Создать Render Deploy Hook для сервиса.
+2. Добавить GitHub Secret `RENDER_DEPLOY_HOOK_URL`.
+3. Добавить GitHub Repository Variable `ENABLE_RENDER_DEPLOY=true`.
