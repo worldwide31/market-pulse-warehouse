@@ -42,6 +42,26 @@ select {
   background: #fffef7;
 }
 
+.field-stack {
+  display: grid;
+  gap: 5px;
+}
+
+.field-stack input {
+  width: 100%;
+}
+
+.form-hint {
+  color: var(--deep);
+  font-size: 12px;
+  font-weight: 700;
+  min-height: 14px;
+}
+
+.form-hint.warning {
+  color: #b42318;
+}
+
 input:focus,
 select:focus {
   border-color: var(--deep);

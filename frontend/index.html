@@ -87,7 +87,10 @@
         <form id="orderForm" class="grid-form order-form">
           <input name="customer_name" placeholder="Клиент" required />
           <select name="product_id" id="orderProduct"></select>
-          <input name="quantity" placeholder="Количество" type="number" min="1" required />
+          <div class="field-stack">
+            <input id="orderQuantity" name="quantity" placeholder="Количество" type="number" min="1" required />
+            <span id="orderStockHint" class="form-hint">Выберите товар</span>
+          </div>
           <button type="submit">Создать заказ</button>
         </form>
         <div class="table-wrap">

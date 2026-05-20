@@ -17,6 +17,8 @@ const productsBody = document.querySelector("#productsBody");
 const ordersBody = document.querySelector("#ordersBody");
 const movementsList = document.querySelector("#movementsList");
 const orderProduct = document.querySelector("#orderProduct");
+const orderQuantity = document.querySelector("#orderQuantity");
+const orderStockHint = document.querySelector("#orderStockHint");
 const movementProduct = document.querySelector("#movementProduct");
 const categoryFilter = document.querySelector("#categoryFilter");
 
@@ -51,10 +53,25 @@ async function request(path, options = {}) {
   });
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: response.statusText }));
-    throw new Error(error.detail || "Ошибка запроса");
+    const detail = Array.isArray(error.detail)
+      ? error.detail.map((item) => item.msg || JSON.stringify(item)).join("; ")
+      : error.detail;
+    throw new Error(humanizeError(detail || "Ошибка запроса"));
   }
   if (response.status === 204) return null;
   return response.json();
+}
+
+function humanizeError(message) {
+  const text = String(message);
+  if (text.includes("Not enough stock for product")) {
+    const sku = text.replace("Not enough stock for product", "").trim();
+    return `Не хватает остатка для товара ${sku}. Уменьшите количество или сделайте приход.`;
+  }
+  if (text.includes("Not enough stock")) {
+    return "Не хватает остатка на складе.";
+  }
+  return text;
 }
 
 function formPayload(form) {
@@ -131,11 +148,35 @@ function renderProductOptions() {
   const options = products
     .map(
       (product) =>
-        `<option value="${product.id}">${escapeHtml(product.sku)} · ${escapeHtml(product.name)}</option>`,
+        `<option value="${product.id}">${escapeHtml(product.sku)} · ${escapeHtml(product.name)} (${product.quantity} шт.)</option>`,
     )
     .join("");
   orderProduct.innerHTML = options;
   movementProduct.innerHTML = options;
+  updateOrderAvailability();
+}
+
+function selectedOrderProduct() {
+  return products.find((product) => product.id === Number(orderProduct.value));
+}
+
+function updateOrderAvailability() {
+  const product = selectedOrderProduct();
+  if (!product) {
+    orderQuantity.removeAttribute("max");
+    orderStockHint.textContent = "Выберите товар";
+    orderStockHint.classList.remove("warning");
+    return;
+  }
+
+  orderQuantity.max = product.quantity;
+  orderStockHint.textContent = `Доступно для заказа: ${product.quantity} шт.`;
+  const requested = Number(orderQuantity.value || 0);
+  const tooMuch = requested > product.quantity;
+  orderStockHint.classList.toggle("warning", tooMuch || product.quantity === 0);
+  if (tooMuch) {
+    orderStockHint.textContent = `На складе только ${product.quantity} шт. Уменьшите количество.`;
+  }
 }
 
 function renderCategoryFilter() {
@@ -294,11 +335,12 @@ document.querySelector("#logoutButton").addEventListener("click", () => {
 document.querySelector("#productForm").addEventListener("submit", async (event) => {
   // Создание товара с мгновенным обновлением таблицы и фильтра.
   event.preventDefault();
+  const form = event.currentTarget;
   await request("/products", {
     method: "POST",
-    body: JSON.stringify(formPayload(event.currentTarget)),
+    body: JSON.stringify(formPayload(form)),
   });
-  event.currentTarget.reset();
+  form.reset();
   notify("Товар добавлен");
   await refreshAfterChange("products");
 });
@@ -306,27 +348,39 @@ document.querySelector("#productForm").addEventListener("submit", async (event) 
 document.querySelector("#orderForm").addEventListener("submit", async (event) => {
   // Создание заказа из одной выбранной позиции.
   event.preventDefault();
-  const data = formPayload(event.currentTarget);
-  await request("/orders", {
-    method: "POST",
-    body: JSON.stringify({
-      customer_name: data.customer_name,
-      items: [{ product_id: data.product_id, quantity: data.quantity }],
-    }),
-  });
-  event.currentTarget.reset();
-  notify("Заказ создан");
-  await refreshAfterChange("orders");
+  const form = event.currentTarget;
+  try {
+    const data = formPayload(form);
+    const product = selectedOrderProduct();
+    if (product && data.quantity > product.quantity) {
+      notify(`На складе только ${product.quantity} шт. Уменьшите количество.`);
+      updateOrderAvailability();
+      return;
+    }
+    await request("/orders", {
+      method: "POST",
+      body: JSON.stringify({
+        customer_name: data.customer_name,
+        items: [{ product_id: data.product_id, quantity: data.quantity }],
+      }),
+    });
+    form.reset();
+    notify("Заказ создан");
+    await refreshAfterChange("orders");
+  } catch (error) {
+    notify(error.message);
+  }
 });
 
 document.querySelector("#movementForm").addEventListener("submit", async (event) => {
   // Ручное проведение прихода, расхода или инвентаризации.
   event.preventDefault();
+  const form = event.currentTarget;
   await request("/movements", {
     method: "POST",
-    body: JSON.stringify(formPayload(event.currentTarget)),
+    body: JSON.stringify(formPayload(form)),
   });
-  event.currentTarget.reset();
+  form.reset();
   notify("Движение проведено");
   await refreshAfterChange("movements");
 });
@@ -381,6 +435,8 @@ movementsList.addEventListener("click", async (event) => {
 document.querySelector("#reloadProducts").addEventListener("click", loadProducts);
 document.querySelector("#reloadOrders").addEventListener("click", loadOrders);
 document.querySelector("#reloadMovements").addEventListener("click", loadMovements);
+orderProduct.addEventListener("change", updateOrderAvailability);
+orderQuantity.addEventListener("input", updateOrderAvailability);
 categoryFilter.addEventListener("change", renderProducts);
 
 updateSession();
