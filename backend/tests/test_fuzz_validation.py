@@ -10,6 +10,7 @@ invalid_roles = st.text(min_size=1).filter(lambda value: value not in {"admin", 
 sku_pattern = re.compile(r"^[A-Z0-9-]+$")
 
 
+# Фаззинг ролей: Hypothesis генерирует случайные строки вместо допустимых ролей.
 @given(role=invalid_roles)
 def test_fuzz_rejects_unknown_roles(role):
     try:
@@ -24,6 +25,7 @@ def test_fuzz_rejects_unknown_roles(role):
     raise AssertionError(f"Invalid role accepted: {role}")
 
 
+# Фаззинг остатков: Hypothesis подбирает отрицательные количества товара.
 @given(quantity=st.integers(max_value=-1))
 def test_fuzz_rejects_negative_product_quantity(quantity):
     try:
@@ -40,6 +42,7 @@ def test_fuzz_rejects_negative_product_quantity(quantity):
     raise AssertionError(f"Negative quantity accepted: {quantity}")
 
 
+# Фаззинг SKU: Hypothesis генерирует строки, не подходящие под складской формат.
 @given(sku=st.text(min_size=1, max_size=12).filter(lambda value: not sku_pattern.fullmatch(value)))
 def test_fuzz_rejects_invalid_sku_format(sku):
     try:
